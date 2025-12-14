@@ -16,6 +16,7 @@ Add lightweight, scoped guidance for an AI agent (and humans) by placing AGENTS.
 - Repo layout: where backend, frontend, docs, infra live; list the major modules/subprojects.
 - Cross-domain workflows to document (e.g., frontend calling backend API, auth flow, shared types, local dev).
 - If you want feature maps: top 5-15 user-facing features (names) and which module owns them.
+- Any rules about MCP usage to capture in root AGENTS.md (allowed servers/tools, safety constraints).
 - Any hard rules (do not touch X, required commands, style rules).
 
 ## Where to put AGENTS.md (heuristics)
