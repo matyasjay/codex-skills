@@ -30,6 +30,7 @@ Update documentation so it matches the current code and is easy for the target a
      - API contract changes (request/response examples)
      - DB migrations and operational steps
      - behavior changes visible to users
+   - If the change is an architectural/behavioral decision, add or update an ADR (use `references/adr-template.md`).
 4) Apply edits with minimal churn
    - Prefer small, targeted edits over rewrites.
    - Add examples that are copy/paste runnable.
