@@ -28,11 +28,12 @@ function withTempDir(fn) {
   }
 }
 
-test("help lists verify and init-ledger", () => {
+test("help lists verify, init-ledger, and install-agent-scripts", () => {
   const result = runCli(["help"]);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /init-ledger/);
   assert.match(result.stdout, /verify <name>/);
+  assert.match(result.stdout, /install-agent-scripts/);
 });
 
 test("verify succeeds for a well-formed skill", () => {

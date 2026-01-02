@@ -72,10 +72,55 @@ npx codex-skills search browser
 npx codex-skills install agents-md
 npx codex-skills install-category development
 npx codex-skills install-all
+npx codex-skills install-agent-scripts
 npx codex-skills install agents-md --ref main
 npx codex-skills init-ledger
 npx codex-skills verify agents-md
 ```
+
+### Add agent-scripts to PATH
+After running `install-agent-scripts`, the scripts live under the agent skills
+directory (for Codex: `~/.codex/skills/agent-scripts`). Add that folder to your
+PATH if you want to call scripts directly from the terminal.
+
+Windows (PowerShell):
+```powershell
+$path = [Environment]::GetEnvironmentVariable("Path", "User")
+[Environment]::SetEnvironmentVariable("Path", "$path;$HOME\\.codex\\skills\\agent-scripts", "User")
+```
+Restart your terminal for changes to take effect.
+
+macOS/Linux (bash/zsh):
+```bash
+export PATH="$PATH:$HOME/.codex/skills/agent-scripts"
+```
+To persist, add the export to `~/.bashrc` or `~/.zshrc`.
+
+## Brave Search API keys
+The `brave-search` skill uses the Brave Search API. Configure one or both of:
+- `BRAVE_API_KEY` (primary)
+- `BRAVE_AI_API_KEY` (fallback)
+
+### Windows (PowerShell)
+Set for the current session:
+```powershell
+$env:BRAVE_API_KEY = "your_key"
+$env:BRAVE_AI_API_KEY = "your_key"
+```
+
+Persist for your user account:
+```powershell
+setx BRAVE_API_KEY "your_key"
+setx BRAVE_AI_API_KEY "your_key"
+```
+Restart your terminal after using `setx`.
+
+### macOS/Linux (bash/zsh)
+```bash
+export BRAVE_API_KEY="your_key"
+export BRAVE_AI_API_KEY="your_key"
+```
+To persist, add the exports to `~/.bashrc`, `~/.zshrc`, or your shell profile.
 
 ## GitHub Pages catalog
 The public catalog is published on GitHub Pages and updates on releases:
@@ -86,6 +131,7 @@ The public catalog is published on GitHub Pages and updates on releases:
 - **Default ref:** latest stable GitHub Release; if no releases exist, it falls back to the latest tag.
 - **Override:** `--ref main` to follow `main`, or `--ref <tag>` to pin a specific release.
 - **Install method:** downloads the repo tarball for the ref and copies only the requested skill folder into the agent’s skills directory.
+- **Agent scripts:** `install-agent-scripts` copies `agent-scripts/` into the agent’s skills directory.
 - **Auth (optional):** set `GITHUB_TOKEN` to reduce GitHub API rate limits.
 
 ### Commands
@@ -95,6 +141,7 @@ The public catalog is published on GitHub Pages and updates on releases:
 - `install <name>`: copy the skill to the chosen agent path.
 - `install-category <category>`: install all skills in a category.
 - `install-all`: install every skill in the catalog.
+- `install-agent-scripts`: install shared agent scripts alongside skills.
 - `init-ledger`: create `~/.codex/AGENTS.MD` (global ledger, not a skill).
 - `verify <name>`: verify a local skill install (checks SKILL.md + frontmatter).
 

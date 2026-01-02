@@ -29,6 +29,7 @@ const CODEX_ROOT = path.join(os.homedir(), ".codex");
 const LEDGER_NAME = "AGENTS.MD";
 const LEDGER_PATH = path.join(CODEX_ROOT, LEDGER_NAME);
 const LEDGER_PATTERN_FILE = "LEDGER-PATTERN.md";
+const AGENT_SCRIPTS_DIR = "agent-scripts";
 
 const USE_COLOR = (process.stdout && process.stdout.isTTY && !process.env.NO_COLOR) ||
   (process.env.FORCE_COLOR && process.env.FORCE_COLOR !== "0");
@@ -387,6 +388,29 @@ function installSkillFromRepo(skill, repoRoot, destDir, options) {
   return { status: "installed", path: destPath };
 }
 
+function installAgentScriptsFromRepo(repoRoot, destDir, options) {
+  const destPath = path.join(destDir, AGENT_SCRIPTS_DIR);
+  if (fs.existsSync(destPath) && !options.force) {
+    return { status: "exists", path: destPath };
+  }
+
+  const scriptsPath = resolveSkillPath(repoRoot, {
+    name: AGENT_SCRIPTS_DIR,
+    path: AGENT_SCRIPTS_DIR
+  });
+
+  if (!fs.existsSync(scriptsPath)) {
+    throw new Error(`Agent scripts not found in archive: ${scriptsPath}`);
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  copyDir(scriptsPath, destPath);
+  return { status: "installed", path: destPath };
+}
+
 function showAgentInstructions(agent, skillName, destPath) {
   switch (agent) {
     case "codex":
@@ -464,6 +488,7 @@ function listSkillsOutput(data, ref, json) {
   log(`\nInstall: ${colors.cyan}npx codex-skills install <skill-name> [--agent <agent>]${colors.reset}`);
   log(`Install by category: ${colors.cyan}npx codex-skills install-category <category> [--agent <agent>]${colors.reset}`);
   log(`Install all: ${colors.cyan}npx codex-skills install-all [--agent <agent>]${colors.reset}`);
+  log(`Install scripts: ${colors.cyan}npx codex-skills install-agent-scripts [--agent <agent>]${colors.reset}`);
   const defaultAgentPath = AGENT_PATHS[DEFAULT_AGENT];
   log(`${colors.dim}Default agent is "${DEFAULT_AGENT}" (${defaultAgentPath}).${colors.reset}`);
 }
@@ -534,6 +559,7 @@ ${colors.bold}Commands:${colors.reset}
   ${colors.green}install <name>${colors.reset}                Install a skill   
   ${colors.green}install-category <category>${colors.reset}   Install all skills in a category
   ${colors.green}install-all${colors.reset}                   Install all skills
+  ${colors.green}install-agent-scripts${colors.reset}         Install shared agent scripts
   ${colors.green}search <query>${colors.reset}               Search skills      
   ${colors.green}info <name>${colors.reset}                  Show skill details 
   ${colors.green}init-ledger${colors.reset}                  Create ~/.codex/AGENTS.MD (not a skill)
@@ -563,6 +589,7 @@ ${colors.bold}Examples:${colors.reset}
   npx codex-skills install agents-md
   npx codex-skills install-category development
   npx codex-skills install-all
+  npx codex-skills install-agent-scripts
   npx codex-skills install agents-md --ref main
   npx codex-skills init-ledger
   npx codex-skills verify agents-md
@@ -790,6 +817,31 @@ async function installAllCommand(options) {
   });
 }
 
+async function installAgentScriptsCommand(options) {
+  const resolved = await resolveRef(options.ref);
+  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];
+  if (!destDir) {
+    error(`Unknown agent: ${options.agent}`);
+    return;
+  }
+
+  await withRepoRoot(resolved.ref, async (repoRoot) => {
+    const result = installAgentScriptsFromRepo(repoRoot, destDir, {
+      force: options.force
+    });
+    if (result.status === "exists") {
+      error(`Agent scripts already exist at ${result.path}`);
+      log("Use --force to overwrite.");
+      return;
+    }
+
+    success("Installed: agent-scripts");
+    info(`Ref: ${resolved.ref}`);
+    info(`Location: ${result.path}`);
+    log(`${colors.dim}Add this folder to PATH if you want to run scripts directly.${colors.reset}`);
+  });
+}
+
 async function installSkillsBatch({ skills, destDir, options, ref, summaryLabel }) {
   let installedCount = 0;
   let skippedCount = 0;
@@ -844,6 +896,10 @@ async function main() {
       case "install-all":
       case "install-everything":
         await installAllCommand(parsed);
+        break;
+      case "install-agent-scripts":
+      case "install-scripts":
+        await installAgentScriptsCommand(parsed);
         break;
       case "search":
       case "s":

@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "updated": "2025-12-29T23:21:29Z",
-  "total": 16,
+  "version": "1.6.0",
+  "updated": "2026-01-02T00:22:42Z",
+  "total": 21,
   "skills": [
     {
       "name": "agents-md",
@@ -22,6 +22,17 @@
       "source": "jMerta/codex-skills",
       "license": "MIT",
       "path": "branch-cleaner",
+      "featured": false,
+      "verified": true
+    },
+    {
+      "name": "brave-search",
+      "description": "Web search and content extraction via Brave Search API. Use for searching documentation, facts, or any web content. Lightweight, no browser required.",
+      "category": "development",
+      "author": "steipete",
+      "source": "steipete/agent-scripts",
+      "license": "MIT",
+      "path": "brave-search",
       "featured": false,
       "verified": true
     },
@@ -81,6 +92,17 @@
       "verified": true
     },
     {
+      "name": "create-cli",
+      "description": ">",
+      "category": "development",
+      "author": "steipete",
+      "source": "steipete/agent-scripts",
+      "license": "MIT",
+      "path": "create-cli",
+      "featured": false,
+      "verified": true
+    },
+    {
       "name": "create-pr",
       "description": "Create a high-quality pull request: branch, focused changes, lint/build, conventional commit, and a clear PR description with validation steps. Use when the user asks to open or prepare a PR.",
       "category": "development",
@@ -110,6 +132,28 @@
       "source": "jMerta/codex-skills",
       "license": "MIT",
       "path": "docs-sync",
+      "featured": false,
+      "verified": true
+    },
+    {
+      "name": "frontend-design",
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code that avoids generic AI aesthetics.",
+      "category": "development",
+      "author": "steipete",
+      "source": "steipete/agent-scripts",
+      "license": "MIT",
+      "path": "frontend-design",
+      "featured": false,
+      "verified": true
+    },
+    {
+      "name": "oracle",
+      "description": "Use the @steipete/oracle CLI to bundle a prompt plus the right files and get a second-model review (API or browser) for debugging, refactors, design checks, or cross-validation.",
+      "category": "development",
+      "author": "steipete",
+      "source": "steipete/agent-scripts",
+      "license": "MIT",
+      "path": "oracle",
       "featured": false,
       "verified": true
     },
@@ -169,6 +213,17 @@
       "verified": true
     },
     {
+      "name": "video-transcript-downloader",
+      "description": "Download videos, audio, subtitles, and clean paragraph-style transcripts from YouTube and any other yt-dlp supported site. Use when asked to \u201cdownload this video\u201d, \u201csave this clip\u201d, \u201crip audio\u201d, \u201cget subtitles\u201d, \u201cget transcript\u201d, or to troubleshoot yt-dlp/ffmpeg and formats/playlists.",
+      "category": "development",
+      "author": "steipete",
+      "source": "steipete/agent-scripts",
+      "license": "MIT",
+      "path": "video-transcript-downloader",
+      "featured": false,
+      "verified": true
+    },
+    {
       "name": "vps-checkup",
       "description": "SSH into an Ubuntu VPS (Docker) for a read-only health/security/update report (UFW + fail2ban) and propose fixes; apply updates/restarts only with explicit confirmation. Use when the user wants a read-only VPS health/security check.",
       "category": "operations",
@@ -185,7 +240,7 @@
       "id": "development",
       "name": "Development",
       "description": "Coding and software development skills",
-      "count": 11
+      "count": 16
     },
     {
       "id": "documentation",
