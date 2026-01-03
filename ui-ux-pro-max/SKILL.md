@@ -133,37 +133,37 @@ These are frequently overlooked issues that make UI look unprofessional:
 
 ### Icons & Visual Elements
 
-| Rule | Do | Don't |
-|------|----|----- |
-| **No emoji icons** | Use SVG icons (Heroicons, Lucide, Simple Icons) | Use emojis like 🎨 🚀 ⚙️ as UI icons |
-| **Stable hover states** | Use color/opacity transitions on hover | Use scale transforms that shift layout |
-| **Correct brand logos** | Research official SVG from Simple Icons | Guess or use incorrect logo paths |
-| **Consistent icon sizing** | Use fixed viewBox (24x24) with w-6 h-6 | Mix different icon sizes randomly |
+| Rule | Enforce |
+|------|---------|
+| **SVG icon sets** | Use SVG icons from a single set (Heroicons, Lucide, Simple Icons) for UI controls; reserve emojis for content only. |
+| **Stable hover states** | Use color/opacity transitions on hover; keep layout dimensions fixed to prevent shift. |
+| **Correct brand logos** | Pull official SVGs from Simple Icons or brand sites; verify the latest mark before use. |
+| **Consistent icon sizing** | Standardize viewBox (24x24) and apply w-6 h-6 (or equivalent) across the set. |
 
 ### Interaction & Cursor
 
-| Rule | Do | Don't |
-|------|----|----- |
-| **Cursor pointer** | Add `cursor-pointer` to all clickable/hoverable cards | Leave default cursor on interactive elements |
-| **Hover feedback** | Provide visual feedback (color, shadow, border) | No indication element is interactive |
-| **Smooth transitions** | Use `transition-colors duration-200` | Instant state changes or too slow (>500ms) |
+| Rule | Enforce |
+|------|---------|
+| **Pointer cues** | Add `cursor-pointer` to all clickable/hoverable cards and elements. |
+| **Hover feedback** | Provide clear visual feedback (color, shadow, border) on hover and focus. |
+| **Smooth transitions** | Use 150-300ms transitions (colors, opacity, shadow) to keep changes fluid. |
 
 ### Light/Dark Mode Contrast
 
-| Rule | Do | Don't |
-|------|----|----- |
-| **Glass card light mode** | Use `bg-white/80` or higher opacity | Use `bg-white/10` (too transparent) |
-| **Text contrast light** | Use `#0F172A` (slate-900) for text | Use `#94A3B8` (slate-400) for body text |
-| **Muted text light** | Use `#475569` (slate-600) minimum | Use gray-400 or lighter |
-| **Border visibility** | Use `border-gray-200` in light mode | Use `border-white/10` (invisible) |
+| Rule | Enforce |
+|------|---------|
+| **Glass card light mode** | Use `bg-white/80` or higher opacity for glass surfaces. |
+| **Light text contrast** | Use `#0F172A` (slate-900) or darker for body text to meet 4.5:1 contrast. |
+| **Muted text light** | Use `#475569` (slate-600) or darker for secondary text. |
+| **Border visibility** | Use `border-gray-200` or higher in light mode so edges remain visible. |
 
 ### Layout & Spacing
 
-| Rule | Do | Don't |
-|------|----|----- |
-| **Floating navbar** | Add `top-4 left-4 right-4` spacing | Stick navbar to `top-0 left-0 right-0` |
-| **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
-| **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
+| Rule | Enforce |
+|------|---------|
+| **Floating navbar spacing** | Add `top-4 left-4 right-4` (or equivalent) margin for floating navbars. |
+| **Content clearance** | Add top padding equal to the fixed navbar height to keep content visible. |
+| **Consistent max-width** | Use a single container width (e.g., `max-w-6xl` or `max-w-7xl`) across sections. |
 
 ---
 
