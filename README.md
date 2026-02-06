@@ -1,10 +1,11 @@
 # Codex skills catalog
 
-Personal Codex CLI skills (drop-in folders under `~/.codex/skills/`).
+Personal Codex skills (drop-in folders under `~/.agents/skills/`).
 Catalog: https://jmerta.github.io/codex-skills/
 
 ## How it works
-- Codex discovers skills from `~/.codex/skills/**/SKILL.md` (loaded at startup).
+- Codex discovers skills from `~/.agents/skills/**/SKILL.md` (user scope) and `.agents/skills/**/SKILL.md` in repos (repo scope).
+- The standard is `.agents/skills` (repo) and `~/.agents/skills` (user). Legacy `~/.codex/skills/**/SKILL.md` is still supported.
 - Only `name`, `description`, and the SKILL.md path are injected into context; bodies and `references/` are not auto-loaded (Codex can open/read them when needed).
 
 ## Enable skills (Codex CLI)
@@ -24,7 +25,7 @@ Codex also supports a single, global ledger file that applies across projects. T
 npx codex-skills init-ledger
 ```
 
-Location (same root as the skills folder, without `/skills`):
+Location (Codex home directory):
 - macOS/Linux: `~/.codex/AGENTS.MD`
 - Windows (PowerShell): `$HOME\.codex\AGENTS.MD`
 
@@ -55,12 +56,12 @@ Recommended ledger headings:
 
 ### macOS/Linux
 ```bash
-git clone https://github.com/jMerta/codex-skills.git ~/.codex/skills
+git clone https://github.com/jMerta/codex-skills.git ~/.agents/skills
 ```
 
 ### Windows (PowerShell)
 ```powershell
-git clone https://github.com/jMerta/codex-skills.git "$HOME\.codex\skills"      
+git clone https://github.com/jMerta/codex-skills.git "$HOME\.agents\skills"
 ```
 
 ## CLI (npx)
@@ -80,47 +81,21 @@ npx codex-skills verify agents-md
 
 ### Add agent-scripts to PATH
 After running `install-agent-scripts`, the scripts live under the agent skills
-directory (for Codex: `~/.codex/skills/agent-scripts`). Add that folder to your
+directory (default: `~/.agents/skills/agent-scripts`). Add that folder to your
 PATH if you want to call scripts directly from the terminal.
 
 Windows (PowerShell):
 ```powershell
 $path = [Environment]::GetEnvironmentVariable("Path", "User")
-[Environment]::SetEnvironmentVariable("Path", "$path;$HOME\\.codex\\skills\\agent-scripts", "User")
+[Environment]::SetEnvironmentVariable("Path", "$path;$HOME\\.agents\\skills\\agent-scripts", "User")
 ```
 Restart your terminal for changes to take effect.
 
 macOS/Linux (bash/zsh):
 ```bash
-export PATH="$PATH:$HOME/.codex/skills/agent-scripts"
+export PATH="$PATH:$HOME/.agents/skills/agent-scripts"
 ```
 To persist, add the export to `~/.bashrc` or `~/.zshrc`.
-
-## Brave Search API keys
-The `brave-search` skill uses the Brave Search API. Configure one or both of:
-- `BRAVE_API_KEY` (primary)
-- `BRAVE_AI_API_KEY` (fallback)
-
-### Windows (PowerShell)
-Set for the current session:
-```powershell
-$env:BRAVE_API_KEY = "your_key"
-$env:BRAVE_AI_API_KEY = "your_key"
-```
-
-Persist for your user account:
-```powershell
-setx BRAVE_API_KEY "your_key"
-setx BRAVE_AI_API_KEY "your_key"
-```
-Restart your terminal after using `setx`.
-
-### macOS/Linux (bash/zsh)
-```bash
-export BRAVE_API_KEY="your_key"
-export BRAVE_AI_API_KEY="your_key"
-```
-To persist, add the exports to `~/.bashrc`, `~/.zshrc`, or your shell profile.
 
 ## GitHub Pages catalog
 The public catalog is published on GitHub Pages and updates on releases:
@@ -130,15 +105,15 @@ The public catalog is published on GitHub Pages and updates on releases:
 - **Source of truth:** the CLI fetches `skills.json` from GitHub for the selected ref.
 - **Default ref:** latest stable GitHub Release; if no releases exist, it falls back to the latest tag.
 - **Override:** `--ref main` to follow `main`, or `--ref <tag>` to pin a specific release.
-- **Install method:** downloads the repo tarball for the ref and copies only the requested skill folder into the agent’s skills directory.
-- **Agent scripts:** `install-agent-scripts` copies `agent-scripts/` into the agent’s skills directory.
+- **Install method:** downloads the repo tarball for the ref and copies only the requested skill folder into your skills directory.
+- **Agent scripts:** `install-agent-scripts` copies `agent-scripts/` into your skills directory.
 - **Auth (optional):** set `GITHUB_TOKEN` to reduce GitHub API rate limits.
 
 ### Commands
 - `list` / `ls`: show all skills (grouped by category). Supports `--json`.      
 - `search <query>`: search by name/description/category.
 - `info <name>`: show metadata for a single skill.
-- `install <name>`: copy the skill to the chosen agent path.
+- `install <name>`: copy the skill to your skills directory.
 - `install-category <category>`: install all skills in a category.
 - `install-all`: install every skill in the catalog.
 - `install-agent-scripts`: install shared agent scripts alongside skills.
@@ -146,25 +121,19 @@ The public catalog is published on GitHub Pages and updates on releases:
 - `verify <name>`: verify a local skill install (checks SKILL.md + frontmatter).
 
 ### Common options
-- `--agent <agent>`: target agent (default: `codex`).
+- `--dir <dir>`: destination skills directory (default: `~/.agents/skills/`).
 - `--ref <ref>`: Git ref (tag or branch).
 - `--force`: overwrite an existing skill install.
 - `--json`: JSON output for `list`.
 
-### Supported agents and install paths
-- `codex`: `~/.codex/skills/` (default)
-- `claude`: `~/.claude/skills/`
-- `cursor`: `./.cursor/skills/` (project-local)
-- `amp`: `~/.amp/skills/`
-- `vscode` / `copilot`: `./.github/skills/` (project-local)
-- `project`: `./.skills/` (portable)
-- `goose`: `~/.config/goose/skills/`
-- `opencode`: `~/.opencode/skills/`
+### Install locations
+- User catalog: `~/.agents/skills/` (default)
+- Repo local: `./.agents/skills/` (use `--dir .agents/skills`)
 
 ### Maintaining the registry
 If you add or rename skills:
 1) Update `skills-meta.json` (category/author/license overrides as needed).
-2) Run `python scripts/build_skills_json.py` to regenerate `skills.json`.
+2) Run `python3 scripts/build_skills_json.py` to regenerate `skills.json`.
 3) Commit both files.
 
 ## Skills
@@ -185,15 +154,12 @@ If you add or rename skills:
 The following skills are sourced from `steipete/agent-scripts` (MIT). Author:   
 @steipete
 - `agent-scripts` (scripts bundle)
-- `brave-search`
 - `create-cli`
-- `frontend-design`
-- `oracle`
 - `video-transcript-downloader`
 
 Each copied skill folder includes a `LICENSE` and `ATTRIBUTION.md`. The
 steipete-derived skills also include attribution sections in `SKILL.md`. Related
-scripts live in `skills/agent-scripts` and include their own
+scripts live in `agent-scripts/` (installed alongside skills) and include their own
 `LICENSE`/`ATTRIBUTION.md`.
 
 Additional third-party skills:
@@ -212,8 +178,8 @@ This repo includes a CI check that scans for invisible/suspicious Unicode charac
 - PR metadata (title/body) and commit messages (via GitHub Actions event payload)
 
 Run locally:
-- `python scripts/check_invisible_chars.py --all`
-- `python scripts/check_invisible_chars.py --commit-range origin/main..HEAD`
+- `python3 scripts/check_invisible_chars.py --all`
+- `python3 scripts/check_invisible_chars.py --commit-range origin/main..HEAD`
 
 Note: this mitigates common invisible-character attacks, but does not detect all Unicode deception (e.g., homoglyph/confusable characters).
 

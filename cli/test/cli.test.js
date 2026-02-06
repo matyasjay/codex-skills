@@ -24,7 +24,7 @@ function withTempDir(fn) {
   try {
     return fn(tempDir);
   } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    fs.rmSync(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   }
 }
 
@@ -36,9 +36,16 @@ test("help lists verify, init-ledger, and install-agent-scripts", () => {
   assert.match(result.stdout, /install-agent-scripts/);
 });
 
+test("--agent exits with a helpful error", () => {
+  const result = runCli(["list", "--agent", "codex"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stdout, /--agent flag has been removed/i);
+});
+
 test("verify succeeds for a well-formed skill", () => {
   withTempDir((tempDir) => {
-    const skillDir = path.join(tempDir, ".skills", "agents-md");
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const skillDir = path.join(skillsDir, "agents-md");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
       path.join(skillDir, "SKILL.md"),
@@ -46,7 +53,7 @@ test("verify succeeds for a well-formed skill", () => {
       "utf8"
     );
 
-    const result = runCli(["verify", "agents-md", "--agent", "project"], {
+    const result = runCli(["verify", "agents-md", "--dir", skillsDir], {
       cwd: tempDir
     });
 
@@ -57,7 +64,8 @@ test("verify succeeds for a well-formed skill", () => {
 
 test("verify warns on name mismatch", () => {
   withTempDir((tempDir) => {
-    const skillDir = path.join(tempDir, ".skills", "agents-md");
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const skillDir = path.join(skillsDir, "agents-md");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
       path.join(skillDir, "SKILL.md"),
@@ -65,7 +73,7 @@ test("verify warns on name mismatch", () => {
       "utf8"
     );
 
-    const result = runCli(["verify", "agents-md", "--agent", "project"], {
+    const result = runCli(["verify", "agents-md", "--dir", skillsDir], {
       cwd: tempDir
     });
 
@@ -77,7 +85,8 @@ test("verify warns on name mismatch", () => {
 
 test("verify reports missing skill directory", () => {
   withTempDir((tempDir) => {
-    const result = runCli(["verify", "missing-skill", "--agent", "project"], {
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const result = runCli(["verify", "missing-skill", "--dir", skillsDir], {
       cwd: tempDir
     });
 
@@ -88,10 +97,11 @@ test("verify reports missing skill directory", () => {
 
 test("verify reports missing SKILL.md", () => {
   withTempDir((tempDir) => {
-    const skillDir = path.join(tempDir, ".skills", "missing-skill");
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const skillDir = path.join(skillsDir, "missing-skill");
     fs.mkdirSync(skillDir, { recursive: true });
 
-    const result = runCli(["verify", "missing-skill", "--agent", "project"], {
+    const result = runCli(["verify", "missing-skill", "--dir", skillsDir], {
       cwd: tempDir
     });
 
@@ -102,11 +112,12 @@ test("verify reports missing SKILL.md", () => {
 
 test("verify reports missing frontmatter", () => {
   withTempDir((tempDir) => {
-    const skillDir = path.join(tempDir, ".skills", "no-frontmatter");
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const skillDir = path.join(skillsDir, "no-frontmatter");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(path.join(skillDir, "SKILL.md"), "# Missing frontmatter\n", "utf8");
 
-    const result = runCli(["verify", "no-frontmatter", "--agent", "project"], {
+    const result = runCli(["verify", "no-frontmatter", "--dir", skillsDir], {
       cwd: tempDir
     });
 
@@ -117,7 +128,8 @@ test("verify reports missing frontmatter", () => {
 
 test("verify reports missing name or description", () => {
   withTempDir((tempDir) => {
-    const skillDir = path.join(tempDir, ".skills", "no-description");
+    const skillsDir = path.join(tempDir, ".agents", "skills");
+    const skillDir = path.join(skillsDir, "no-description");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
       path.join(skillDir, "SKILL.md"),
@@ -125,7 +137,7 @@ test("verify reports missing name or description", () => {
       "utf8"
     );
 
-    const result = runCli(["verify", "no-description", "--agent", "project"], {
+    const result = runCli(["verify", "no-description", "--dir", skillsDir], {
       cwd: tempDir
     });
 

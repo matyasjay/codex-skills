@@ -1,7 +1,7 @@
 # Agent instructions (scope: this repository)
 
 ## Scope and layout
-- This repo is a catalog of Codex CLI skills (drop-in folders under `~/.codex/skills/`).
+- This repo is a catalog of Codex skills (drop-in folders under `~/.agents/skills/`).
 - Each skill is a folder containing a required `SKILL.md` plus optional `references/`, `scripts/`, and `assets/`.
 
 ## Conventions
@@ -10,12 +10,12 @@
 - Avoid bulk-loading `references/` unless the task requires it.
 
 ## Verification (preferred commands)
-- Validate skill metadata: `python scripts/validate_skills.py`
+- Validate skill metadata: `python3 scripts/validate_skills.py`
 - CI mirrors this as the GitHub Actions workflow **Validate skills**.
 
 ## Releases (GitHub Releases)
 - Use SemVer tags without a `v` prefix (example: `1.2.3`).
-- Cut releases from `main` with a clean working tree (`git status` should be empty) and passing validation (`python scripts/validate_skills.py`).
+- Cut releases from `main` with a clean working tree (`git status` should be empty) and passing validation (`python3 scripts/validate_skills.py`).
 - Keep `cli/package.json` version aligned with the release tag (the npm publish workflow enforces this).
 - Ensure npm trusted publishing is configured for this repo (GitHub Actions OIDC).
 - Decide the release range:

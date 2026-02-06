@@ -1,7 +1,7 @@
 {
-  "version": "1.6.0",
-  "updated": "2026-01-02T23:25:28Z",
-  "total": 21,
+  "version": "2.0.0",
+  "updated": "2026-02-06T11:39:27Z",
+  "total": 19,
   "skills": [
     {
       "name": "agents-md",
@@ -22,17 +22,6 @@
       "source": "jMerta/codex-skills",
       "license": "MIT",
       "path": "branch-cleaner",
-      "featured": false,
-      "verified": true
-    },
-    {
-      "name": "brave-search",
-      "description": "Web search and content extraction via Brave Search API. Use for searching documentation, facts, or any web content. Lightweight, no browser required.",
-      "category": "development",
-      "author": "steipete",
-      "source": "steipete/agent-scripts",
-      "license": "MIT",
-      "path": "brave-search",
       "featured": false,
       "verified": true
     },
@@ -93,7 +82,7 @@
     },
     {
       "name": "create-cli",
-      "description": ">",
+      "description": "Design command-line interface parameters and UX: arguments, flags, subcommands, help text, output formats, error messages, exit codes, prompts, config/env precedence, and safe/dry-run behavior. Use when designing a CLI spec (before implementation) or refactoring an existing CLI's surface area for consistency, composability, and discoverability.",
       "category": "development",
       "author": "steipete",
       "source": "steipete/agent-scripts",
@@ -132,17 +121,6 @@
       "source": "jMerta/codex-skills",
       "license": "MIT",
       "path": "docs-sync",
-      "featured": false,
-      "verified": true
-    },
-    {
-      "name": "oracle",
-      "description": "Use the @steipete/oracle CLI to bundle a prompt plus the right files and get a second-model review (API or browser) for debugging, refactors, design checks, or cross-validation.",
-      "category": "development",
-      "author": "steipete",
-      "source": "steipete/agent-scripts",
-      "license": "MIT",
-      "path": "oracle",
       "featured": false,
       "verified": true
     },
@@ -240,7 +218,7 @@
       "id": "development",
       "name": "Development",
       "description": "Coding and software development skills",
-      "count": 16
+      "count": 14
     },
     {
       "id": "documentation",

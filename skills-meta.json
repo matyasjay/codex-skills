@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
+  "version": "2.0.0",
   "defaults": {
     "category": "development",
     "author": "jMerta",
@@ -42,22 +42,7 @@
     "vps-checkup": {
       "category": "operations"
     },
-    "brave-search": {
-      "author": "steipete",
-      "source": "steipete/agent-scripts",
-      "license": "MIT"
-    },
     "create-cli": {
-      "author": "steipete",
-      "source": "steipete/agent-scripts",
-      "license": "MIT"
-    },
-    "frontend-design": {
-      "author": "steipete",
-      "source": "steipete/agent-scripts",
-      "license": "MIT"
-    },
-    "oracle": {
       "author": "steipete",
       "source": "steipete/agent-scripts",
       "license": "MIT"

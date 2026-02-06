@@ -8,23 +8,12 @@ const https = require("https");
 
 const REPO_OWNER = "jMerta";
 const REPO_NAME = "codex-skills";
-const DEFAULT_AGENT = "codex";
 const USER_AGENT = "codex-skills-cli";
 const DEFAULT_TIMEOUT_MS = 30000;
 
 const SKILLS_INDEX = "skills.json";
 
-const AGENT_PATHS = {
-  claude: path.join(os.homedir(), ".claude", "skills"),
-  cursor: path.join(process.cwd(), ".cursor", "skills"),
-  amp: path.join(os.homedir(), ".amp", "skills"),
-  vscode: path.join(process.cwd(), ".github", "skills"),
-  copilot: path.join(process.cwd(), ".github", "skills"),
-  project: path.join(process.cwd(), ".skills"),
-  goose: path.join(os.homedir(), ".config", "goose", "skills"),
-  opencode: path.join(os.homedir(), ".opencode", "skills"),
-  codex: path.join(os.homedir(), ".codex", "skills")
-};
+const DEFAULT_SKILLS_DIR = path.join(os.homedir(), ".agents", "skills");
 const CODEX_ROOT = path.join(os.homedir(), ".codex");
 const LEDGER_NAME = "AGENTS.MD";
 const LEDGER_PATH = path.join(CODEX_ROOT, LEDGER_NAME);
@@ -205,22 +194,31 @@ function parseArgs(args) {
   const result = {
     command: null,
     param: null,
-    agent: DEFAULT_AGENT,
+    dir: null,
+    deprecatedAgent: null,
     ref: null,
     force: false,
     json: false
   };
-
-  const validAgents = Object.keys(AGENT_PATHS);
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === "--agent" || arg === "-a") {
       const value = args[i + 1];
+      if (value && !value.startsWith("-")) {
+        result.deprecatedAgent = value;
+        i++;
+      } else {
+        result.deprecatedAgent = true;
+      }
+      continue;
+    }
+
+    if (arg === "--dir") {
+      const value = args[i + 1];
       if (value) {
-        const cleaned = value.replace(/^-+/, "");
-        result.agent = validAgents.includes(cleaned) ? cleaned : DEFAULT_AGENT;
+        result.dir = value;
       }
       i++;
       continue;
@@ -251,10 +249,7 @@ function parseArgs(args) {
     }
 
     if (arg.startsWith("--")) {
-      const potentialAgent = arg.replace(/^--/, "");
-      if (validAgents.includes(potentialAgent)) {
-        result.agent = potentialAgent;
-      } else if (!result.command) {
+      if (!result.command) {
         result.command = arg;
       }
       continue;
@@ -270,9 +265,24 @@ function parseArgs(args) {
   return result;
 }
 
+function expandHomeDir(value) {
+  if (!value) return value;
+  if (value === "~") return os.homedir();
+  if (value.startsWith("~/") || value.startsWith("~\\")) {
+    return path.join(os.homedir(), value.slice(2));
+  }
+  return value;
+}
+
+function resolveSkillsDir(dirOverride) {
+  const raw = dirOverride ? expandHomeDir(dirOverride) : DEFAULT_SKILLS_DIR;
+  return path.resolve(raw);
+}
+
 function copyDir(src, dest) {
   if (fs.existsSync(dest)) {
-    fs.rmSync(dest, { recursive: true, force: true });
+    // Windows can transiently lock files (AV scanning, indexers). Retries help.
+    fs.rmSync(dest, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   }
   fs.mkdirSync(dest, { recursive: true });
   const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -364,7 +374,7 @@ async function withRepoRoot(ref, action) {
     const repoRoot = path.join(tmpDir, entries[0]);
     return await action(repoRoot);
   } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
+    fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   }
 }
 
@@ -411,33 +421,9 @@ function installAgentScriptsFromRepo(repoRoot, destDir, options) {
   return { status: "installed", path: destPath };
 }
 
-function showAgentInstructions(agent, skillName, destPath) {
-  switch (agent) {
-    case "codex":
-      log(`${colors.dim}The skill is now available in Codex.${colors.reset}`);
-      log(`${colors.dim}Run: codex --enable skills${colors.reset}`);
-      log(`${colors.dim}Then mention "${skillName}" in your prompt.${colors.reset}`);
-      break;
-    case "claude":
-      log(`${colors.dim}The skill is now available in Claude Code.${colors.reset}`);
-      log(`${colors.dim}Mention "${skillName}" in your prompt to trigger it.${colors.reset}`);
-      break;
-    case "cursor":
-      log(`${colors.dim}Installed in .cursor/skills/ for this project.${colors.reset}`);
-      break;
-    case "amp":
-      log(`${colors.dim}The skill is now available in Amp.${colors.reset}`);
-      break;
-    case "vscode":
-    case "copilot":
-      log(`${colors.dim}Installed in .github/skills/ for this project.${colors.reset}`);
-      break;
-    case "project":
-      log(`${colors.dim}Installed in .skills/ in the current directory.${colors.reset}`);
-      break;
-    default:
-      log(`${colors.dim}The skill is ready to use with ${agent}.${colors.reset}`);
-  }
+function showPostInstallInstructions(skillName, destPath) {
+  log(`${colors.dim}To use it in Codex, mention "${skillName}" (or "$${skillName}") in your prompt.${colors.reset}`);
+  log(`${colors.dim}If you don't see it, ensure skills are enabled (codex --enable skills).${colors.reset}`);
   info(`Location: ${destPath}`);
 }
 
@@ -485,12 +471,11 @@ function listSkillsOutput(data, ref, json) {
     log(`${colors.dim}* = featured skill${colors.reset}`);
   }
 
-  log(`\nInstall: ${colors.cyan}npx codex-skills install <skill-name> [--agent <agent>]${colors.reset}`);
-  log(`Install by category: ${colors.cyan}npx codex-skills install-category <category> [--agent <agent>]${colors.reset}`);
-  log(`Install all: ${colors.cyan}npx codex-skills install-all [--agent <agent>]${colors.reset}`);
-  log(`Install scripts: ${colors.cyan}npx codex-skills install-agent-scripts [--agent <agent>]${colors.reset}`);
-  const defaultAgentPath = AGENT_PATHS[DEFAULT_AGENT];
-  log(`${colors.dim}Default agent is "${DEFAULT_AGENT}" (${defaultAgentPath}).${colors.reset}`);
+  log(`\nInstall: ${colors.cyan}npx codex-skills install <skill-name> [--dir <dir>]${colors.reset}`);
+  log(`Install by category: ${colors.cyan}npx codex-skills install-category <category> [--dir <dir>]${colors.reset}`);
+  log(`Install all: ${colors.cyan}npx codex-skills install-all [--dir <dir>]${colors.reset}`);
+  log(`Install scripts: ${colors.cyan}npx codex-skills install-agent-scripts [--dir <dir>]${colors.reset}`);
+  log(`${colors.dim}Default install dir is ${DEFAULT_SKILLS_DIR}.${colors.reset}`);
 }
 
 function searchSkillsOutput(data, query) {
@@ -543,13 +528,13 @@ function showInfoOutput(skill) {
 
   log(`\n${colors.bold}Install:${colors.reset}`);
   log(`  npx codex-skills install ${skill.name}`);
-  log(`  npx codex-skills install ${skill.name} --agent cursor`);
+  log(`  npx codex-skills install ${skill.name} --dir .agents/skills`);
 }
 
 function showHelp() {
   log(`
 ${colors.bold}Codex Skills${colors.reset}
-Install skills for Codex and compatible agents.
+Install skills into the standard skills catalog (${DEFAULT_SKILLS_DIR}) or a repo-local .agents/skills/.
 
 ${colors.bold}Usage:${colors.reset}
   npx codex-skills <command> [options]
@@ -562,31 +547,21 @@ ${colors.bold}Commands:${colors.reset}
   ${colors.green}install-agent-scripts${colors.reset}         Install shared agent scripts
   ${colors.green}search <query>${colors.reset}               Search skills      
   ${colors.green}info <name>${colors.reset}                  Show skill details 
-  ${colors.green}init-ledger${colors.reset}                  Create ~/.codex/AGENTS.MD (not a skill)
+  ${colors.green}init-ledger${colors.reset}                  Create ${LEDGER_PATH} (not a skill)
   ${colors.green}verify <name>${colors.reset}                Verify a local skill install
   ${colors.green}help${colors.reset}                          Show this help    
 
 ${colors.bold}Options:${colors.reset}
-  --agent <agent>             Target agent (default: codex -> ~/.codex/skills/)
+  --dir <dir>                 Destination skills directory (default: ${DEFAULT_SKILLS_DIR})
   --ref <ref>                 Use a Git ref (tag or branch). Default: latest release
   --force                     Overwrite if the skill already exists
   --json                      Output JSON for list
-
-${colors.bold}Agents:${colors.reset}
-  ${colors.cyan}codex${colors.reset}   ~/.codex/skills/ (default)
-  ${colors.cyan}claude${colors.reset}  ~/.claude/skills/
-  ${colors.cyan}cursor${colors.reset}  .cursor/skills/ in current project
-  ${colors.cyan}amp${colors.reset}     ~/.amp/skills/
-  ${colors.cyan}vscode${colors.reset}  .github/skills/ in current project
-  ${colors.cyan}copilot${colors.reset} .github/skills/ (alias for vscode)
-  ${colors.cyan}project${colors.reset} .skills/ in current directory (portable)
-  ${colors.cyan}goose${colors.reset}   ~/.config/goose/skills/
-  ${colors.cyan}opencode${colors.reset} ~/.opencode/skills/
 
 ${colors.bold}Examples:${colors.reset}
   npx codex-skills list
   npx codex-skills search browser
   npx codex-skills install agents-md
+  npx codex-skills install agents-md --dir .agents/skills
   npx codex-skills install-category development
   npx codex-skills install-all
   npx codex-skills install-agent-scripts
@@ -624,15 +599,11 @@ async function initLedgerCommand(options) {
 async function verifyCommand(options) {
   if (!options.param) {
     error("Please specify a skill name to verify.");
-    log("Usage: npx codex-skills verify <skill-name> [--agent <agent>]");
+    log("Usage: npx codex-skills verify <skill-name> [--dir <dir>]");
     process.exit(1);
   }
 
-  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];
-  if (!destDir) {
-    error(`Unknown agent: ${options.agent}`);
-    return;
-  }
+  const destDir = resolveSkillsDir(options.dir);
 
   const skillPath = path.join(destDir, options.param);
   if (!fs.existsSync(skillPath)) {
@@ -703,7 +674,7 @@ async function infoCommand(options) {
 async function installCommand(options) {
   if (!options.param) {
     error("Please specify a skill name.");
-    log("Usage: npx codex-skills install <skill-name> [--agent <agent>] [--ref <ref>] [--force]");
+    log("Usage: npx codex-skills install <skill-name> [--dir <dir>] [--ref <ref>] [--force]");
     process.exit(1);
   }
 
@@ -719,11 +690,7 @@ async function installCommand(options) {
     return;
   }
 
-  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];     
-  if (!destDir) {
-    error(`Unknown agent: ${options.agent}`);
-    return;
-  }
+  const destDir = resolveSkillsDir(options.dir);
 
   const destPath = path.join(destDir, skill.name);
   if (fs.existsSync(destPath) && !options.force) {
@@ -742,14 +709,14 @@ async function installCommand(options) {
 
     success(`Installed: ${skill.name}`);
     info(`Ref: ${resolved.ref}`);
-    showAgentInstructions(options.agent, skill.name, result.path);
+    showPostInstallInstructions(skill.name, result.path);
   });
 }
 
 async function installCategoryCommand(options) {
   if (!options.param) {
     error("Please specify a category.");
-    log("Usage: npx codex-skills install-category <category> [--agent <agent>] [--ref <ref>] [--force]");
+    log("Usage: npx codex-skills install-category <category> [--dir <dir>] [--ref <ref>] [--force]");
     process.exit(1);
   }
 
@@ -777,11 +744,7 @@ async function installCategoryCommand(options) {
     return;
   }
 
-  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];
-  if (!destDir) {
-    error(`Unknown agent: ${options.agent}`);
-    return;
-  }
+  const destDir = resolveSkillsDir(options.dir);
 
   await installSkillsBatch({
     skills: categorySkills,
@@ -802,11 +765,7 @@ async function installAllCommand(options) {
     return;
   }
 
-  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];
-  if (!destDir) {
-    error(`Unknown agent: ${options.agent}`);
-    return;
-  }
+  const destDir = resolveSkillsDir(options.dir);
 
   await installSkillsBatch({
     skills,
@@ -819,11 +778,7 @@ async function installAllCommand(options) {
 
 async function installAgentScriptsCommand(options) {
   const resolved = await resolveRef(options.ref);
-  const destDir = AGENT_PATHS[options.agent] || AGENT_PATHS[DEFAULT_AGENT];
-  if (!destDir) {
-    error(`Unknown agent: ${options.agent}`);
-    return;
-  }
+  const destDir = resolveSkillsDir(options.dir);
 
   await withRepoRoot(resolved.ref, async (repoRoot) => {
     const result = installAgentScriptsFromRepo(repoRoot, destDir, {
@@ -859,7 +814,7 @@ async function installSkillsBatch({ skills, destDir, options, ref, summaryLabel 
 
         installedCount += 1;
         success(`Installed: ${skill.name}`);
-        showAgentInstructions(options.agent, skill.name, result.path);
+        showPostInstallInstructions(skill.name, result.path);
       } catch (err) {
         failedCount += 1;
         error(`Failed to install ${skill.name}: ${err.message || err}`);
@@ -880,6 +835,13 @@ async function main() {
   const command = parsed.command || "help";
 
   try {
+    if (parsed.deprecatedAgent) {
+      error("The --agent flag has been removed.");
+      log(`Skills now install into ${DEFAULT_SKILLS_DIR} by default.`);
+      log("To install into a repo, use: npx codex-skills install <skill-name> --dir .agents/skills");
+      process.exit(2);
+    }
+
     switch (command) {
       case "list":
       case "ls":

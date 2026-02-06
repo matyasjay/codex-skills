@@ -46,8 +46,8 @@ description: Browse and install Codex CLI skills.
     </nav>
     <div class="sidebar-card">
       <h4>Default install</h4>
-      <p>Skills install to Codex CLI unless you pass <code>--agent</code>.</p>
-      <code>~/.codex/skills/</code>
+      <p>Skills install to the standard catalog unless you pass <code>--dir</code>.</p>
+      <code>~/.agents/skills/</code>
     </div>
     <div class="sidebar-card">
       <h4>Latest release</h4>
@@ -99,7 +99,7 @@ description: Browse and install Codex CLI skills.
       <h2>Global AGENTS.MD ledger (not a skill)</h2>
       <p>
         Codex can use a single ledger file that applies across projects. It lives at
-        <code>~/.codex/AGENTS.MD</code> (same root as skills, without <code>/skills</code>).
+        <code>~/.codex/AGENTS.MD</code> (Codex home directory).
       </p>
       <ol>
         <li>Create it once with <code>npx codex-skills init-ledger</code>.</li>
@@ -156,7 +156,7 @@ description: Browse and install Codex CLI skills.
         example, <code>steipete/agent-scripts</code>). When copied, each skill
         folder includes a <code>LICENSE</code>, an <code>ATTRIBUTION.md</code>,
         and an Attribution section in <code>SKILL.md</code>. Related scripts live
-        in <code>skills/agent-scripts</code> and include their own
+        in <code>agent-scripts/</code> and include their own
         <code>LICENSE</code>/<code>ATTRIBUTION.md</code>.
       </p>
     </section>
@@ -178,7 +178,7 @@ description: Browse and install Codex CLI skills.
     <footer class="site-footer">
       <div>
         <h3>Need help?</h3>
-        <p>Check the README for full CLI instructions and supported agents.</p>
+        <p>Check the README for full CLI instructions.</p>
       </div>
       <div class="footer-cta">
         <a class="button" href="https://github.com/jMerta/codex-skills">View on GitHub</a>

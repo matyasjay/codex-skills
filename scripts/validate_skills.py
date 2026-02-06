@@ -3,11 +3,20 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import yaml
-
 
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
+NAME_RE = re.compile(r"^name:\s*(.+)$", re.MULTILINE)
+DESC_RE = re.compile(r"^description:\s*(.+)$", re.MULTILINE)
 MENTIONED_FILE_RE = re.compile(r"(?P<path>(?:references|scripts|assets)/[A-Za-z0-9][A-Za-z0-9_.\\/-]*)")
+
+
+def strip_quotes(value: str | None) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
+        return value[1:-1].strip()
+    return value
 
 
 def validate_skill_file(path: Path) -> tuple[list[str], dict]:
@@ -17,10 +26,12 @@ def validate_skill_file(path: Path) -> tuple[list[str], dict]:
         return (["missing frontmatter block (--- ... --- at top of file)"], {})
 
     frontmatter = match.group(1)
-    try:
-        data = yaml.safe_load(frontmatter) or {}
-    except Exception as exc:  # noqa: BLE001
-        return ([f"invalid YAML: {exc}"], {})
+    name_match = NAME_RE.search(frontmatter)
+    desc_match = DESC_RE.search(frontmatter)
+    data = {
+        "name": strip_quotes(name_match.group(1)) if name_match else None,
+        "description": strip_quotes(desc_match.group(1)) if desc_match else None,
+    }
 
     errors: list[str] = []
     for key, limit in (("name", 100), ("description", 500)):
